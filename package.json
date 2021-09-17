@@ -8,7 +8,7 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npx nodemon app.js"
+    "start": "npx nodemon server.js"
   },
   "author": "Parth Dhawan",
   "license": "ISC",
