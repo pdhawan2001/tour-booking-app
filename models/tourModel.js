@@ -50,7 +50,8 @@ const tourSchema = new mongoose.Schema({
     images: [String],
     createdAt: {
       type: Date,
-      default: Date.now()
+      default: Date.now(),
+      select: false // we hid this field directly from the schema, we do this for fields like password
     }, 
     startDates: [Date],
         

@@ -4,6 +4,9 @@ const tourController = require('../controllers/tourController');
 const router = express.Router();
  
 // router.param('id', tourController.checkId);  // runs for certain parameters, only parameter we have is id
+router
+    .route('/top-5-cheap')
+    .get(tourController.aliasTopTours, tourController.getAllTours); // route aliasing for user
 
 router
     .route('/')
