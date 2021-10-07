@@ -1,4 +1,5 @@
 const express = require('express');
+const { get } = require('mongoose');
 const tourController = require('../controllers/tourController');
 
 const router = express.Router();
@@ -7,6 +8,14 @@ const router = express.Router();
 router
     .route('/top-5-cheap')
     .get(tourController.aliasTopTours, tourController.getAllTours); // route aliasing for user
+
+router
+    .route('/tour-stats')
+    .get(tourController.getTourStats);
+
+router
+    .route('/monthly-plan/:year')
+    .get(tourController.getMonthlyPlan);
 
 router
     .route('/')
