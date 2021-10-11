@@ -54,9 +54,17 @@ const tourSchema = new mongoose.Schema({
       select: false // we hid this field directly from the schema, we do this for fields like password
     }, 
     startDates: [Date],
-        
-  }); // this is schema
-  
+         
+  }, {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }); // this is schema, // first is schema definiton and second is object with options
+
+  tourSchema.virtual('durationWeeks').get(function() {
+    return this.duration /7;
+  });  // virtual properties are those which are not needed to be saved on database and involves simple tasks // this will be created each time we get something from db
+  // we cannot use virtual prop in query like tour.find where durationWeek = 1, because it is not a part of db
+
   const Tour = mongoose.model('Tour', tourSchema); // this is a model
 
-  module.exports = Tour;
+  module.exports = Tour; 
