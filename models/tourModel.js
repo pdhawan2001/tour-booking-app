@@ -98,7 +98,14 @@ tourSchema.pre(/^find/, function(next) { // regex so every command starting with
 
 tourSchema.post(/^find/, function(docs, next) {
   console.log(`Query took ${Date.now() - this.start} milliseconds`); // will get the query time by subtracting from the current time
-  console.log(docs);
+  // console.log(docs);
+  next();
+});
+
+// AGGREGATION MIDDLEWARE
+tourSchema.pre('aggregate', function(next){
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } }); // here we are adding another field in the aggregation pipeline
+  console.log(this.pipeline()); // this will upoint towards current aggregation
   next();
 });
 
