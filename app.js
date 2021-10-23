@@ -24,16 +24,30 @@ app.use(express.static(`${__dirname}/public`)); // to serve static file
 // });
 
 // 2) ROUTES 
-
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 
 // if any request reached this point of code that means it wasn't handled by any of the above router functions, because middleware executes line by line
 app.all('*', (req, res, next) => {
-  res.status(404).json({
-    status: 'fail',
-    message: `Can't find ${req.originalUrl} on this server!`  // req.originalUrl gives the URL that was requested
-  });
+  // res.status(404).json({
+  //   status: 'fail',
+  //   message: `Can't find ${req.originalUrl} on this server!`  // req.originalUrl gives the URL that was requested
+  // });
+
+  const err = new Error(`Can't find ${req.originalUrl} on this server!`);
+  err.status = 'fail';
+  err.statusCode = 404;
+   
+  next(err); // it will skip all other middleware and go directly to error handling middleware
 }); // all and star for every route
+
+app.use((err, req, res, next) => {
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || 'error';
+  res.status(err.statusCode).json({
+    status: err.status,
+    message: err.message
+  });
+}); // express automatically knows it is an error handling middleware
 
 module.exports = app;
