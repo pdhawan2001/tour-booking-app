@@ -2,6 +2,7 @@ const express = require('express');
 const morgan = require('morgan');
 
 const AppError = require('./utils/appError');
+const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 
@@ -33,15 +34,6 @@ app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404)); // it will skip all other middleware and go directly to error handling middleware
 }); // all and star for every route
 
-app.use((err, req, res, next) => {
-  console.log(err.stack); // show us where an error happened
-
-  err.statusCode = err.statusCode || 500;
-  err.status = err.status || 'error';
-  res.status(err.statusCode).json({
-    status: err.status,
-    message: err.message
-  });
-}); // express automatically knows it is an error handling middleware, error first middleware, first argument is error
+app.use(globalErrorHandler); // express automatically knows it is an error handling middleware, error first middleware, first argument is error
 
 module.exports = app;
