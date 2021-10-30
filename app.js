@@ -20,10 +20,10 @@ app.use(express.static(`${__dirname}/public`)); // to serve static file
 //   next();
 // });
 
-// app.use((req, res, next) => {
-//   req.requestTime = new Date().toISOString(); // convert date and time to readable string
-//   next();
-// });
+app.use((req, res, next) => {
+  req.requestTime = new Date().toISOString(); // convert date and time to readable string
+  next();
+});
 
 // 2) ROUTES 
 app.use('/api/v1/tours', tourRouter);
