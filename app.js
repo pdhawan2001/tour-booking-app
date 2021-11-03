@@ -22,6 +22,7 @@ app.use(express.static(`${__dirname}/public`)); // to serve static file
 
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString(); // convert date and time to readable string
+  // console.log(req.headers);
   next();
 });
 
