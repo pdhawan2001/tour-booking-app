@@ -63,7 +63,7 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
       this.passwordChangedAt.getTime() / 1000,
       10 // base 10
     ); // change normal time to a time stamp format, i.e milliseconds
-    console.log(changedTimestamp, JWTTimestamp);
+    // console.log(changedTimestamp, JWTTimestamp);
     return JWTTimestamp < changedTimestamp; // not change meanse JWT time stamp will be less than changed time stamp
   }
   return false; // by default user has not changed his password after the token was issued
