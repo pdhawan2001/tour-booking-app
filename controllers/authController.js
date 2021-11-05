@@ -79,19 +79,19 @@ exports.protect = catchAsync(async (req, res, next) => {
   // console.log(decoded);
 
   // 3) Check if user still exists.
-  const freshUser = await User.findById(decoded.id); // user based on decoded ID, not the new user, we can be assured that the ID is correct, because if we have made it till this step here after verification, then the id ought to be correct.
-  if (!freshUser) {
+  const currentUser = await User.findById(decoded.id); // user based on decoded ID, not the new user, we can be assured that the ID is correct, because if we have made it till this step here after verification, then the id ought to be correct.
+  if (!currentUser) {
     return next(
       new AppError('The user belonging to this token does not exist.', 401)
     );
   }
 
   // 4) Check if user changed password after the token was issued.
-  if (freshUser.changedPasswordAfter(decoded.iat)) { // iat: issued at
+  if (currentUser.changedPasswordAfter(decoded.iat)) { // iat: issued at
     return next(new AppError('User recently changed password! Please log in again', 401));
   } 
 
   // GRANT ACCESS TO PROTECTED ROUTE
-  req.user = freshUser; // put user data on fresh user that is grant him access
+  req.user = currentUser; // put user data on current user that is grant him access
   next();
 });
