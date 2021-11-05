@@ -1,20 +1,26 @@
-const AppError = require("../utils/appError");
+const AppError = require('../utils/appError');
 
-const handleCastErrorDB = err => {
+const handleCastErrorDB = (err) => {
   const message = `Invalid ${err.path}: ${err.value}.`;
   return new AppError(message, 400);
 };
 
-const handleDuplicateFieldsDB =  err => { 
+const handleDuplicateFieldsDB = (err) => {
   const message = `Duplicate field value: ${err.keyValue.name}. Please use another value!`;
   return new AppError(message, 400);
 };
 
-const handleValidationErrorDB = err => {
-  const errors = Object.values(err.errors).map(el => el.message); // ..map is used to lloop over the messages
+const handleValidationErrorDB = (err) => {
+  const errors = Object.values(err.errors).map((el) => el.message); // ..map is used to lloop over the messages
   const message = `Invalid input data. ${errors.join('. ')}`;
   return new AppError(message, 400);
 };
+
+const handleJWTError = () =>
+  new AppError('Invalid token. Please log in again!', 401);
+
+const handleJWTExpiredError = () =>
+  new AppError('Your token has expired! Please login again.', 401);
 
 const sendErrorDev = (err, res) => {
   res.status(err.statusCode).json({
@@ -36,13 +42,13 @@ const sendErrorProd = (err, res) => {
     // Programming or other unknown error: don't leak error details
   } else {
     // 1) Log error
-    console.error('ERROR 🔴️', err) // console specific for error
+    console.error('ERROR 🔴️', err); // console specific for error
 
     // 2) Send generic message
     res.status(500).json({
-        status: 'error',
-        message: 'Something went very wrong!',
-      });
+      status: 'error',
+      message: 'Something went very wrong!',
+    });
   }
 };
 
@@ -59,11 +65,21 @@ module.exports = (err, req, res, next) => {
     if (error.name === 'CastError') {
       error = handleCastErrorDB(error);
     }
-    if (error.code === 11000) { // for duplicate fields
+    if (error.code === 11000) {
+      // for duplicate fields
       error = handleDuplicateFieldsDB(error);
-    }  
-    if (err.name === 'ValidationError') { // while updating the DB
+    }
+    if (err.name === 'ValidationError') {
+      // while updating the DB
       error = handleValidationErrorDB(error);
+    }
+    if (error.name === 'JsonWebTokenError') {
+      // JWT duplicate key error
+      error = handleJWTError(error);
+    }
+    if (error.name === 'TokenExpiredError') {
+      // if token is expired
+      error = handleJWTExpiredError(error);
     }
 
     sendErrorProd(error, res);

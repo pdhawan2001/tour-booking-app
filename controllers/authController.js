@@ -1,10 +1,13 @@
+const { promisify } = require('util'); // requiring just promisify method from utils module
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
 // To create a new token
-const signToken = (id) =>
+const signToken = (
+  id // payload is id, we are passsing id
+) =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   }); // in mongoDB id is called _id, secret is a string used to create a token, a secret string
@@ -62,7 +65,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     // value should start with bearer word and then token, so therefore bearer is mentioned here
     token = req.headers.authorization.split(' ')[1]; // we want the part after the word "Bearer" that is the token so we have split the string into an array, and then we have taken the second part which is the token itself
   }
-  console.log(token);
+  // console.log(token);
 
   if (!token) {
     return next(
@@ -71,10 +74,19 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   // 2) Validate the token(Verification).
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET); // this is basically the payload
+  // console.log(decoded);
 
   // 3) Check if user still exists.
+  const freshUser = await User.findById(decoded.id); // user based on decoded ID, not the new user, we can be assured that the ID is correct, because if we have made it till this step here after verification, then the id ought to be correct.
+  if (!freshUser) {
+    return next(
+      new AppError('The user belonging to this token does not exist.', 401)
+    );
+  }
 
   // 4) Check if user changed password after the token was issued.
+
 
   next();
 });
