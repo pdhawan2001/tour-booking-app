@@ -18,6 +18,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
+    passwordChangedAt: req.body.passwordChangedAt
   }); // create user with this much data, because of security reasons not with full body, as anyone can specify his role as admin here
 
   const token = signToken(newUser._id);
@@ -86,7 +87,11 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   // 4) Check if user changed password after the token was issued.
+  if (freshUser.changedPasswordAfter(decoded.iat)) { // iat: issued at
+    return next(new AppError('User recently changed password! Please log in again', 401));
+  } 
 
-
+  // GRANT ACCESS TO PROTECTED ROUTE
+  req.user = freshUser; // put user data on fresh user that is grant him access
   next();
 });

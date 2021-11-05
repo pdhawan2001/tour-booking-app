@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
         return el === this.password; // if both passwords are same then this will return true
       },
       message: 'Passwords are not the same!!',
-    }
+    },
   },
   passwordChangedAt: Date,
 });
@@ -59,9 +59,14 @@ userSchema.methods.correctPassword = async function (
 
 userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   if (this.passwordChangedAt) {
-    console.log(this.passwordChangedAt, JWTTimestamp);
+    const changedTimestamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10 // base 10
+    ); // change normal time to a time stamp format, i.e milliseconds
+    console.log(changedTimestamp, JWTTimestamp);
+    return JWTTimestamp < changedTimestamp; // not change meanse JWT time stamp will be less than changed time stamp
   }
-  return false;
+  return false; // by default user has not changed his password after the token was issued
 };
 
 const User = mongoose.model('User', userSchema);
