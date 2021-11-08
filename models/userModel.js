@@ -15,6 +15,11 @@ const userSchema = new mongoose.Schema({
     validate: [validator.isEmail, 'Please provide a valid email!'],
   },
   photo: String,
+  role: {
+    type: String,
+    enum: ['user', 'guide', 'lead-guide', 'admin'], // only allow certain types of strings etc.
+    default: 'user'
+  },
   password: {
     type: String,
     required: [true, 'Please provide a password'],
@@ -62,9 +67,9 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
     const changedTimestamp = parseInt(
       this.passwordChangedAt.getTime() / 1000,
       10 // base 10
-    ); // change normal time to a time stamp format, i.e milliseconds
+    ); // change normal time to a time stamp format,  milliseconds for /1000 // parseInt to get it into integer format, so at the end both JWTTimeStamp and Change password time stam have same format
     // console.log(changedTimestamp, JWTTimestamp);
-    return JWTTimestamp < changedTimestamp; // not change meanse JWT time stamp will be less than changed time stamp
+    return JWTTimestamp < changedTimestamp; // not change means JWT time stamp will be less than changed time stamp, as password will only be changed after logging in
   }
   return false; // by default user has not changed his password after the token was issued
 };

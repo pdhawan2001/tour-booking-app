@@ -18,7 +18,8 @@ exports.signup = catchAsync(async (req, res, next) => {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
-    passwordChangedAt: req.body.passwordChangedAt
+    passwordChangedAt: req.body.passwordChangedAt,
+    role: req.body.role
   }); // create user with this much data, because of security reasons not with full body, as anyone can specify his role as admin here
 
   const token = signToken(newUser._id);
@@ -75,7 +76,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   // 2) Validate the token(Verification).
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET); // this is basically the payload
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET); // this is basically the payload, that is the data which we are passing to the request
   // console.log(decoded);
 
   // 3) Check if user still exists.
@@ -92,6 +93,16 @@ exports.protect = catchAsync(async (req, res, next) => {
   } 
 
   // GRANT ACCESS TO PROTECTED ROUTE
-  req.user = currentUser; // put user data on current user that is grant him access
+  req.user = currentUser; // put entire user data on the request, that is grant him access
   next();
 });
+
+exports.restrictTo = (...roles) => (req, res, next) => { // this function will get access to the roles parameter above
+     // roles is an array ['admin', 'lead-guide]. role='user' will not have permission
+    if(!roles.includes(req.user.role)) { // if the roles does not include lead-guide or admin
+      return next(new AppError('You do not have permission to perform this action', 403));
+    }
+
+    next();
+  }; // a wrapper function which will return the middleware function
+ 
