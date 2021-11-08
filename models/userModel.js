@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
@@ -18,7 +19,7 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: ['user', 'guide', 'lead-guide', 'admin'], // only allow certain types of strings etc.
-    default: 'user'
+    default: 'user',
   },
   password: {
     type: String,
@@ -38,6 +39,8 @@ const userSchema = new mongoose.Schema({
     },
   },
   passwordChangedAt: Date,
+  passwordResetToken: String,
+  passwordResetExpires: Date, // token will expire after a certain time as a security measure
 });
 
 userSchema.pre('save', async function (next) {
@@ -72,6 +75,19 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
     return JWTTimestamp < changedTimestamp; // not change means JWT time stamp will be less than changed time stamp, as password will only be changed after logging in
   }
   return false; // by default user has not changed his password after the token was issued
+};
+
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString('hex'); // this token will be sent to user, so that user can create a new password, it will create random bytes of 32 digits
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex'); // converting in hash using sha256 algo, SHA-256 is a patented cryptographic hash function that outputs a value that is 256 bits long.
+
+    console.log({ resetToken }, this.passwordResetToken); 
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // i.e password will expire after 600000 milliseconds
+
+  return resetToken; // return plain text token because this is the one which we'll be sending through email, i.e unencrypted 
 };
 
 const User = mongoose.model('User', userSchema);

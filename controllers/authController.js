@@ -106,3 +106,20 @@ exports.restrictTo = (...roles) => (req, res, next) => { // this function will g
     next();
   }; // a wrapper function which will return the middleware function
  
+  exports.forgotPassword = catchAsync(async (req, res, next) => {
+    // 1) Get user based on posted email
+    const user = await User.findOne({ email: req.body.email }); /// because we don't know user's id and user also don't know his id
+    if(!user) {
+      return next(new AppError('There is no user with that email address.', 404));
+    }
+
+    // 2) Generate the random reset token
+    const resetToken = user.createPasswordResetToken(); 
+    await user.save({ validateBeforeSave: false }); // deactivate all validators that we sset in our schema
+
+    // 3) Send it back as an email
+  });
+
+  exports.resetPassword = (req, res, next) => {
+
+  };
