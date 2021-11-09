@@ -18,7 +18,7 @@ const sendEmail = async options => {
         to: options.email, // options opject is what we passed above to the function,
         subject: options.subject,
         text: options.message,
-        // html: .
+        // html: 
     }
 
     // 3) Actually send the email

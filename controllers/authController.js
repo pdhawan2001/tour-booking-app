@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { promisify } = require('util'); // requiring just promisify method from utils module
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
@@ -130,7 +131,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 3) Send it back as an email
   // below basically the URL structure is recreated
   const resetURL = `${req.protocol}://${req.get(
-    'host' 
+    'host'
   )}/api/v1/users/resetPassword/${resetToken}`; // user will click on this email will be able to request from there to change password, req.get('host') so that it can handle both production and development
 
   const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email`;
@@ -139,20 +140,66 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     await sendEmail({
       email: user.email, // or req.body.email
       subject: 'Your password reset token (valid for 10 mins)',
-      message
+      message,
     });
-  } catch(err) { // because if there is an error we want to reset the token and expires property, and just not send the error itself
+  } catch (err) {
+    // because if there is an error we want to reset the token and expires property, and just not send the error itself
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save({ validateBeforeSave: false }); // this is because above property just modifies the data and does not saves it
 
-    return next(new AppError('There was an error sending the email. Try again later!', 500));
+    return next(
+      new AppError(
+        'There was an error sending the email. Try again later!',
+        500
+      )
+    );
   }
 
   res.status(200).json({
     status: 'success',
-    message: 'Token sent to email!'
+    message: 'Token sent to email!',
   });
 });
 
-exports.resetPassword = (req, res, next) => {};
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  // 1) Get user based on the token
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex'); // token is a parameter as we have specified it in user Routes
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  // 2) If token has not expired, and there is a user, set the new password
+  if (!user) {
+    return next(new AppError('Token is invalid or expired!', 400));
+  }
+
+  // setting new password and password confirm
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+
+  // deleting password reset token and token expires
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+
+  // it only modifies the document, so we have to save it
+  await user.save(); // we have to validate in this case so we are not turning off the validators
+
+  // 3) Update changedPasswordAt property for the user
+  
+
+  // 4) Log the user in, send JWT
+  const token = signToken(user._id);
+
+  res.status(200).json({
+    status: 'success',
+    token,
+  });
+});
+
+// for the user and password related stuff we always use save and not findOneAndUpdate and all because we have to run all the validations before saving it

@@ -57,6 +57,15 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') ||  this.isNew) {
+    return next();
+  }
+
+  this.passwordChangedAt = Date.now() - 1000; // this is because saving in DB takes time so we are subtracting one second so that user is able to login with new token, so that the token is always created after the password has been changed
+  next();
+});
+
 userSchema.methods.correctPassword = async function (
   candidatePassword,
   userPassword
@@ -84,10 +93,10 @@ userSchema.methods.createPasswordResetToken = function () {
     .update(resetToken)
     .digest('hex'); // converting in hash using sha256 algo, SHA-256 is a patented cryptographic hash function that outputs a value that is 256 bits long.
 
-    console.log({ resetToken }, this.passwordResetToken); 
+  console.log({ resetToken }, this.passwordResetToken);
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // i.e password will expire after 600000 milliseconds
 
-  return resetToken; // return plain text token because this is the one which we'll be sending through email, i.e unencrypted 
+  return resetToken; // return plain text token because this is the one which we'll be sending through email, i.e unencrypted
 };
 
 const User = mongoose.model('User', userSchema);
