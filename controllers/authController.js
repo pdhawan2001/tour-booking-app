@@ -14,6 +14,18 @@ const signToken = (
     expiresIn: process.env.JWT_EXPIRES_IN,
   }); // in mongoDB id is called _id, secret is a string used to create a token, a secret string
 
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user
+    },
+  });
+};
+ 
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -23,16 +35,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     passwordChangedAt: req.body.passwordChangedAt,
     role: req.body.role,
   }); // create user with this much data, because of security reasons not with full body, as anyone can specify his role as admin here
-
-  const token = signToken(newUser._id);
-
-  res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: newUser,
-    },
-  });
+  createSendToken(newUser, 201, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -52,11 +55,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   // 3) If everything ok, send JWT token to client.
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createSendToken(user, 200, res);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -191,15 +190,30 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   await user.save(); // we have to validate in this case so we are not turning off the validators
 
   // 3) Update changedPasswordAt property for the user
-  
+  // done in userModel
 
   // 4) Log the user in, send JWT
-  const token = signToken(user._id);
-
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createSendToken(user, 200, res);
 });
 
 // for the user and password related stuff we always use save and not findOneAndUpdate and all because we have to run all the validations before saving it
+
+// for logged in users to update password
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  // 1) Get the user from the collection
+  const user = await User.findById(req.user.id).select('+password');
+
+  // 2) Check if posted password is correct
+  if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
+    return next(new AppError('Your current password is wrong.', 401));
+  }
+
+  // 3) If so, update the password
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  await user.save();
+  // User.findByIdAndUpdate will NOT work as it will skip all the validators!
+
+  // 4) Log user in, send JWT
+  createSendToken(user, 200, res);
+});
