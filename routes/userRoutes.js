@@ -17,6 +17,7 @@ router.patch(
 );
 
 router.patch('/updateMe', authController.protect, userController.updateMe);
+router.delete('/deleteMe', authController.protect, userController.deleteMe); // we will use delete as user is not accessible but will not actually delete it
 
 router
   .route('/')

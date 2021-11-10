@@ -55,6 +55,16 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   });
 });
 
+// when a user deletes his account we deactivate it not delete it, so sometime in future he can access it
+exports.deleteMe = catchAsync(async (req, res, next) => {
+  await User.findByIdAndUpdate(req.user.id, { active: false }) // we are logged in that's why we can get the id from req.body
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
 exports.getUser = (req, res) => {
   res.status(500).json({
     status: 'error',

@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide a password'],
     minlength: 8,
-    select: false, // it wwill never show in output
+    select: false, // it will never show in output
   },
   passwordConfirm: {
     type: String,
@@ -41,6 +41,11 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date, // token will expire after a certain time as a security measure
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 
 userSchema.pre('save', async function (next) {
@@ -58,11 +63,18 @@ userSchema.pre('save', async function (next) {
 });
 
 userSchema.pre('save', function (next) {
-  if (!this.isModified('password') ||  this.isNew) {
+  if (!this.isModified('password') || this.isNew) {
     return next();
   }
 
   this.passwordChangedAt = Date.now() - 1000; // this is because saving in DB takes time so we are subtracting one second so that user is able to login with new token, so that the token is always created after the password has been changed
+  next();
+});
+
+userSchema.pre(/^find/, function (next) {
+  // this regex will find the "find" keyword
+  // this is query middleware, so it points to current query
+  this.find({ active: { $ne: false } }); // this will find documents which are active
   next();
 });
 
