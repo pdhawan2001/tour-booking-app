@@ -17,15 +17,30 @@ const signToken = (
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
 
+  // Sending response(token) as a cookie
+  const cookieOptions = {
+    expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000), //it will expire in today's date + time we set in config file(converting in milliseconds) // client/browser will delete the cookie when it has expired
+    httpOnly: true // this will make sure that cookie can not be in any way modified by the browser, this way browser will just store it and send it just like any other req, to prevent cross site scripting attacks
+  };
+
+  if(process.env.NODE_ENV === 'production') {
+    cookieOptions.secure = true;   // this will ensure that cookie will only be sent on an encrypted network like HTTPS
+  }
+
+  res.cookie('jwt', token, cookieOptions);
+
+  // Remove the password from the output
+  user.password = undefined;
+
   res.status(statusCode).json({
     status: 'success',
     token,
     data: {
-      user
+      user,
     },
   });
 };
- 
+
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
