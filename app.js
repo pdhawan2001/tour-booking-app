@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
+const hpp = require('hpp');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -14,7 +15,7 @@ const app = express();
 
 // 1)GLOBAL MIDDLEWARES
 // Set security HTTP headers
-app.use(helmet()); 
+app.use(helmet());
 
 // Development logging
 if (process.env.NODE_ENV === 'development') {
@@ -35,8 +36,22 @@ app.use(express.json({ limit: '10kb' })); // it will limit data of body to take 
 // Data sanitizaion against NoSQL query injection
 app.use(mongoSanitize()); // it will basically look after body and params and filter out $ signs and . (dots) to prevent NoSQL attacks
 
-// Data sanitization against XSS 
+// Data sanitization against XSS
 app.use(xss()); // it will clean any user input from malicious html code
+
+// Prevent parameter pollution
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'ratingsAverage',
+      'maxGroupSize',
+      'difficulty',
+      'price'
+    ],
+  })
+); // we are allowing duplicates for these query strings
 
 // Serving static files
 app.use(express.static(`${__dirname}/public`));
