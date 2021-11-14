@@ -78,6 +78,30 @@ const tourSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    startLocation: {  
+      // GeoJSON, to specify this bject as GeoJSON object we need types and properties
+      type: { 
+        type: String,
+        default: 'Point',
+        enum: ['Point']  // only option we are specifying is 'point'
+      }, 
+      coordinates: [Number], // we expect an array of numbers with latitude first and longitude
+      address: String,
+      description: String
+    },
+    locations: [  // embedded documents, we have to use array for that
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point']
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number // day of the tour on which people will go at this location
+      }
+    ]
   },
   {
     toJSON: { virtuals: true },
