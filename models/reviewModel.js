@@ -28,11 +28,24 @@ const reviewSchema = new mongoose.Schema(
       required: [true, 'Review must belong to a user.'],
     },
   },
-  { 
+  {
     toJSON: { virtuals: true },
     toObject: { virtuals: true }, // we want virtual properties to show up whenever there is an output
   }
 );
+
+// QUERY MIDDLEWARE
+reviewSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'tour',
+    select: 'name',
+  }).populate({
+    path: 'user',
+    select: 'name photo',
+  });
+
+  next();
+});
 
 const Review = mongoose.model('Review', reviewSchema);
 

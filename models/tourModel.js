@@ -163,7 +163,7 @@ tourSchema.pre(/^find/, function (next) {
 tourSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'guides',
-    select: '-__v -passwordChangedAt', // it will not show these fields in the query
+    select: '-__v -passwordChangedAt', // it will not show these fields in the query, because of - sign
   }); // it will fill up the field guides in our model which is refrenced, it will look like embedding but it is actually refrenced, it will fill it up only in the query and not in the actual database, using populate will still actually create a new queery and it can impact performance
   next();
 });
