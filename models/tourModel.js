@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
-const User = require('./userModel');
+// const User = require('./userModel');
 // const validator = require('validator');
 
 const tourSchema = new mongoose.Schema(
@@ -110,7 +110,13 @@ const tourSchema = new mongoose.Schema(
         day: Number, // day of the tour on which people will go at this location
       },
     ],
-    guides: Array,
+    guides: [
+      // this means there will be subdocuments means embedded documents
+      {
+        type: mongoose.Schema.ObjectId, // we expect the type to mongoDb ID
+        ref: 'User', // this will reference it with user, this also doesn't require importing User model
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
@@ -129,12 +135,12 @@ tourSchema.pre('save', function (next) {
   next(); // just like express middleware, mongoose model also require next
 });
 
-tourSchema.pre('save', async function (next) {
-  // guidesPromises because we have marked findById function as async await and it will return a promise
-  const guidesPromises = this.guides.map(async (id) => await User.findById(id)); // this will loop through the guides which we specify while creating a new tour and then it will retrieve users from it
-  this.guides = await Promise.all(guidesPromises);
-  next();
-});
+// tourSchema.pre('save', async function (next) {
+//   // guidesPromises because we have marked findById function as async await and it will return a promise
+//   const guidesPromises = this.guides.map(async (id) => await User.findById(id)); // this will loop through the guides which we specify while creating a new tour and then it will retrieve users from it
+//   this.guides = await Promise.all(guidesPromises);
+//   next();
+// });
 
 // tourSchema.pre('save', function(next) {
 //   console.log('Will save document...');
@@ -151,6 +157,14 @@ tourSchema.pre(/^find/, function (next) {
   // regex so every command starting with find will be executed
   this.find({ secretTour: { $ne: true } }); // here this is a query object
   this.start = Date.now(); // this will set the current time in milliseconds // will give us the time from start of query
+  next();
+});
+
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt', // it will not show these fields in the query
+  }); // it will fill up the field guides in our model which is refrenced, it will look like embedding but it is actually refrenced, it will fill it up only in the query and not in the actual database, using populate will still actually create a new queery and it can impact performance
   next();
 });
 
