@@ -48,7 +48,7 @@ app.use(
       'ratingsAverage',
       'maxGroupSize',
       'difficulty',
-      'price'
+      'price',
     ],
   })
 ); // we are allowing duplicates for these query strings
