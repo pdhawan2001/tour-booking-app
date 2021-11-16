@@ -129,6 +129,13 @@ tourSchema.virtual('durationWeeks').get(function () {
 }); // virtual properties are those which are not needed to be saved on database and involves simple tasks // this will be created each time we get something from db
 // we cannot use virtual prop in query like tour.find where durationWeek = 1, because it is not a part of db
 
+// Virtual  Populate
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour', // this is the name of the field in the other model (review model), where the reference to current model is stored, so it is tour, because in review model we have a field called tour, here tour id is stored
+  localField: '_id', // Id is stored as _id in current tour model, _id is called tour in the foreign model(review model)
+});
+
 // DOCUMENT MIDDLEWARE: runs before .save() and .create() // but not on .insertMany() or update etc
 tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true }); // this will point towards currently processed document

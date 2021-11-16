@@ -36,16 +36,25 @@ const reviewSchema = new mongoose.Schema(
 
 // QUERY MIDDLEWARE
 reviewSchema.pre(/^find/, function (next) {
+  // this.populate({
+  //   path: 'tour',
+  //   select: 'name',
+  // }).populate({
+  //   path: 'user',
+  //   select: 'name photo',
+  // });
+
+  next();
+});
+
+reviewSchema.pre(/^find/, function (next) {
   this.populate({
-    path: 'tour',
-    select: 'name',
-  }).populate({
     path: 'user',
     select: 'name photo',
   });
 
   next();
-});
+}); // we are making reviews available on tour and not tour available on reviews, so to to avoid over populating
 
 const Review = mongoose.model('Review', reviewSchema);
 
