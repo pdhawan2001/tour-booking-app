@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const catchAsync = require('../utils/catchAsync');
 const Tour = require('./tourModel');
 
 const reviewSchema = new mongoose.Schema(
@@ -34,6 +33,8 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
+
 // QUERY MIDDLEWARE
 reviewSchema.pre(/^find/, function (next) {
   this.populate({
@@ -58,7 +59,7 @@ reviewSchema.statics.calcAverageRatings = async function (tourId) {
       },
     },
   ]);
-  console.log(stats);
+  // console.log(stats);
 
   if (stats.length > 0) {
     // we only want to update the tour and not save it somewhere
@@ -85,7 +86,7 @@ reviewSchema.post('save', function () {
 reviewSchema.pre(/^findOneAnd/, async function (next) {
   // we have to use pre here rather than post, because after post query will already be executed and we will no longer have access to this query
   this.r = await this.findOne().clone(); // we want the current document, but now we will execute the query and it will give us the document that is currently processed
-  console.log(this.r); // we created a property on this variable, so that it remains on the document and we can pass it to post middleware
+  // console.log(this.r); // we created a property on this variable, so that it remains on the document and we can pass it to post middleware
   next();
 }); // because behind the scenes findByIdAnd is just the short hand of findOneAnd
 
