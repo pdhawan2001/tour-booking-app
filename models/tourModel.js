@@ -124,6 +124,10 @@ const tourSchema = new mongoose.Schema(
   }
 ); // this is schema, // first is schema definiton and second is object with options
 
+// we are indexing price and ratingsAverage here, because most user will sort by these only
+tourSchema.index({ price: 1, ratingsAverage: -1 }); // 1 stands for sorting in asc, -1 for desc
+tourSchema.index({ slug: 1 }); // unique slug to query for tours, may become the most query field
+
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 }); // virtual properties are those which are not needed to be saved on database and involves simple tasks // this will be created each time we get something from db
