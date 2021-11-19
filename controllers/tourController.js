@@ -1,6 +1,7 @@
 const Tour = require('../models/tourModel');
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
+const AppError = require('../utils/appError');
 
 exports.aliasTopTours = (req, res, next) => {
   req.query.limit = '5';
@@ -89,6 +90,36 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
     status: 'success',
     data: {
       plan,
+    },
+  });
+});
+
+// '/tours-within/:distance/center/:latlng/unit/:unit'
+// /tours-within/233/center/ 25.152248,75.855359/unit/km
+exports.getToursWithin = catchAsync(async (req, res, next) => {
+  const { distance, latlng, unit } = req.params; // we have specified these params in the URL that's why req.params
+  const [lat, lng] = latlng.split(','); // we are spliting the string and it will create an array of two elements longitude and latitude
+
+  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1; // we are dividing the distance by radius of earth in miles and km to basically convert it into radians
+
+  if (!lat || !lng) {
+    next(
+      new AppError(
+        'Please provide latitude and longitude in the format lat, lng.',
+        400
+      )
+    );
+  }
+
+  const tours = await Tour.find({
+    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } }, // in geoJSON we have to define longitude first and then latitude, mongoDb expects radius in a special unit called radians
+  }); // we are querying for startLocation, because startLocation is the field where each tour starts, centerSphere takes an array of coordinates and a radius
+  
+  res.status(200).json({
+    status: 'success',
+    resuls: tours.length,
+    data: {
+      data: tours,
     },
   });
 });

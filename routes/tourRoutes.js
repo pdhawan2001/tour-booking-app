@@ -24,6 +24,12 @@ router
   );
 
 router
+  .route('/tours-within/:distance/center/:latlng/unit/:unit')
+  .get(tourController.getToursWithin); // latlng is latitude and longitude that is the coordinates, at latlng we will put our coordinates and at distance we will put the distance within which we want the tour, unit is the unit of distance i.e km, miles etc
+// /tours-within?distance=233&center=-40,45&units=miles
+// /tours-within/233/center/-40,45/unit/mi // we are using this convention in the above route, we can use any of the two, but this looks cleaner so we are using this one
+
+router
   .route('/')
   .get(tourController.getAllTours)
   .post(

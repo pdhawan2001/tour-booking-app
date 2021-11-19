@@ -128,6 +128,7 @@ const tourSchema = new mongoose.Schema(
 // we are indexing price and ratingsAverage here, because most user will sort by these only
 tourSchema.index({ price: 1, ratingsAverage: -1 }); // 1 stands for sorting in asc, -1 for desc
 tourSchema.index({ slug: 1 }); // unique slug to query for tours, may become the most query field
+tourSchema.index({ startLocation: '2dsphere' }); // we need an index for geospatial queries, A 2dsphere index supports queries that calculate geometries on an earth-like sphere
 
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
