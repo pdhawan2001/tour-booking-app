@@ -29,6 +29,8 @@ router
 // /tours-within?distance=233&center=-40,45&units=miles
 // /tours-within/233/center/-40,45/unit/mi // we are using this convention in the above route, we can use any of the two, but this looks cleaner so we are using this one
 
+router.route('/distances/:latlng/unit/:unit').get(tourController.getDistances);
+
 router
   .route('/')
   .get(tourController.getAllTours)

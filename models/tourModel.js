@@ -188,11 +188,11 @@ tourSchema.post(/^find/, function (docs, next) {
 });
 
 // AGGREGATION MIDDLEWARE
-tourSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } }); // here we are adding another field in the aggregation pipeline
-  console.log(this.pipeline()); // this will upoint towards current aggregation
-  next();
-});
+// tourSchema.pre('aggregate', function (next) {
+//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } }); // here we are adding another field in the aggregation pipeline
+//   console.log(this.pipeline()); // this will point towards current aggregation
+//   next();
+// });
 
 const Tour = mongoose.model('Tour', tourSchema); // this is a model
 

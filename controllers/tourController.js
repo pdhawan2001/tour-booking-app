@@ -114,12 +114,56 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
   const tours = await Tour.find({
     startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } }, // in geoJSON we have to define longitude first and then latitude, mongoDb expects radius in a special unit called radians
   }); // we are querying for startLocation, because startLocation is the field where each tour starts, centerSphere takes an array of coordinates and a radius
-  
+
   res.status(200).json({
     status: 'success',
     resuls: tours.length,
     data: {
       data: tours,
+    },
+  });
+});
+
+exports.getDistances = catchAsync(async (req, res, next) => {
+  const { latlng, unit } = req.params; // we have specified these params in the URL that's why req.params
+  const [lat, lng] = latlng.split(','); // we are spliting the string and it will create an array of two elements longitude and latitude
+
+  const multiplier = unit === 'mi' ? 0.000621371 : 0.001;
+
+  if (!lat || !lng) {
+    next(
+      new AppError(
+        'Please provide latitude and longitude in the format lat, lng.',
+        400
+      )
+    );
+  }
+
+  const distances = await Tour.aggregate([
+    {
+      $geoNear: {
+        // it is the only geoSpatial pipeline stage that actually exists, and IT ALWAYS COMES FIRST, NEED TO BE THE FIRST ONE IN THE PIPELINE, and it requires ONE OF OUR FIELD TO CONTAIN GEOSPATIAL INDEX
+        near: {
+          type: 'Point',
+          coordinates: [lng * 1, lat * 1], // multiplied by 1 to convert in numbers
+        }, // it is the point from which to calculate the distances, each distance will be calculated from this point and start locations of each tour
+        distanceField: 'distance',
+        distanceMultiplier: multiplier, // this will convert it into km
+      },
+    },
+    {
+      $project: {
+        // only show this fields in output
+        distance: 1,
+        name: 1,
+      },
+    },
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      data: distances,
     },
   });
 });
