@@ -1,11 +1,12 @@
 /* eslint-disable */
 import '@babel/polyfill';
 import { displayMap } from './mapbox';
-import { login } from './login';
+import { login, logout } from './login';
 
 // DOM ELEMENTS
 const mapBox = document.getElementById('map');
 const loginForm = document.querySelector('.form');
+const logOutBtn = document.querySelector('.nav__el--logout');
 
 // DELEGATION
 if (mapBox) {
@@ -22,3 +23,6 @@ if (loginForm) {
     login(email, password);
   });
 }
+
+
+if (logOutBtn) logOutBtn.addEventListener('click', logout); // whenever the log Out button is clicked we want to listen to it and then logout the user

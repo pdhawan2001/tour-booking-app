@@ -75,6 +75,14 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+  res.status(200).json({ status: 'success' });
+};
+
 exports.protect = catchAsync(async (req, res, next) => {
   // 1) Get token and check if it exists.
   let token;
@@ -121,34 +129,38 @@ exports.protect = catchAsync(async (req, res, next) => {
 });
 
 // Only for rendered pages, no errorr
-exports.isLoggedIn = catchAsync(async (req, res, next) => {
+exports.isLoggedIn = async (req, res, next) => {
   // for rendered pages we will not have the authorization in header therefore it must come from cookies
   if (req.cookies.jwt) {
-    // 1) Validate the token(Verification).
-    const decoded = await promisify(jwt.verify)(
-      req.cookies.jwt,
-      process.env.JWT_SECRET
-    ); // this is basically the payload, that is the data which we are passing to the request
-    // console.log(decoded);
+    try {
+      // 1) Validate the token(Verification).
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      ); // this is basically the payload, that is the data which we are passing to the request
+      // console.log(decoded);
 
-    // 2) Check if user still exists.
-    const currentUser = await User.findById(decoded.id); // user based on decoded ID, not the new user, we can be assured that the ID is correct, because if we have made it till this step here after verification, then the id ought to be correct.
-    if (!currentUser) {
+      // 2) Check if user still exists.
+      const currentUser = await User.findById(decoded.id); // user based on decoded ID, not the new user, we can be assured that the ID is correct, because if we have made it till this step here after verification, then the id ought to be correct.
+      if (!currentUser) {
+        return next();
+      }
+
+      // 3) Check if user changed password after the token was issued.
+      if (currentUser.changedPasswordAfter(decoded.iat)) {
+        // iat: issued at
+        return next();
+      }
+
+      // THERE IS A LOGGED IN USER
+      res.locals.user = currentUser; // our pug temmplate will get access to it
+      return next();
+    } catch (err) {
       return next();
     }
-
-    // 3) Check if user changed password after the token was issued.
-    if (currentUser.changedPasswordAfter(decoded.iat)) {
-      // iat: issued at
-      return next();
-    }
-
-    // THERE IS A LOGGED IN USER
-    res.locals.user = currentUser; // our pug temmplate will get access to it
-    return next();
   }
   next();
-});
+};
 
 exports.restrictTo =
   (...roles) =>
