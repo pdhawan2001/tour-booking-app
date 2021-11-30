@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -40,6 +41,7 @@ app.use('/api', limiter); // apply to route that start with /api
 
 // Body parser, reading data from body req.body
 app.use(express.json({ limit: '10kb' })); // it will limit data of body to take only 10kb
+app.use(cookieParser());
 
 // Data sanitizaion against NoSQL query injection
 app.use(mongoSanitize()); // it will basically look after body and params and filter out $ signs and . (dots) to prevent NoSQL attacks
@@ -64,7 +66,7 @@ app.use(
 // Test middleware
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString(); // convert date and time to readable string
-  // console.log(req.headers);
+  console.log(req.cookies);
   next();
 });
 

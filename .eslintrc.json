@@ -1,6 +1,7 @@
 {
   "extends": ["airbnb", "prettier", "plugin:node/recommended"],
   "plugins": ["prettier"],
+  "sourceType": "module",
   "rules": {
     "prettier/prettier": "error",
     "spaced-comment": "off",

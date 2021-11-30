@@ -84,6 +84,8 @@ exports.protect = catchAsync(async (req, res, next) => {
   ) {
     // value should start with bearer word and then token, so therefore bearer is mentioned here
     token = req.headers.authorization.split(' ')[1]; // we want the part after the word "Bearer" that is the token so we have split the string into an array, and then we have taken the second part which is the token itself
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
   // console.log(token);
 
@@ -115,6 +117,36 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // GRANT ACCESS TO PROTECTED ROUTE
   req.user = currentUser; // put entire user data on the request, that is grant him access
+  next();
+});
+
+// Only for rendered pages, no errorr
+exports.isLoggedIn = catchAsync(async (req, res, next) => {
+  // for rendered pages we will not have the authorization in header therefore it must come from cookies
+  if (req.cookies.jwt) {
+    // 1) Validate the token(Verification).
+    const decoded = await promisify(jwt.verify)(
+      req.cookies.jwt,
+      process.env.JWT_SECRET
+    ); // this is basically the payload, that is the data which we are passing to the request
+    // console.log(decoded);
+
+    // 2) Check if user still exists.
+    const currentUser = await User.findById(decoded.id); // user based on decoded ID, not the new user, we can be assured that the ID is correct, because if we have made it till this step here after verification, then the id ought to be correct.
+    if (!currentUser) {
+      return next();
+    }
+
+    // 3) Check if user changed password after the token was issued.
+    if (currentUser.changedPasswordAfter(decoded.iat)) {
+      // iat: issued at
+      return next();
+    }
+
+    // THERE IS A LOGGED IN USER
+    res.locals.user = currentUser; // our pug temmplate will get access to it
+    return next();
+  }
   next();
 });
 

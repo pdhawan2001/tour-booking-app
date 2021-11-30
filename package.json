@@ -1,6 +1,9 @@
 {
   "dependencies": {
+    "@babel/polyfill": "^7.12.1",
+    "axios": "^0.24.0",
     "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "express-mongo-sanitize": "^2.1.0",
@@ -23,7 +26,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "npx nodemon server.js",
     "start:prod": "NODE_ENV=production npx nodemon server.js",
-    "debug": "ndb server.js"
+    "debug": "ndb server.js",
+    "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js",
+    "build:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js"
   },
   "author": "Parth Dhawan",
   "license": "ISC",
@@ -39,6 +44,7 @@
     "eslint-plugin-react": "^7.25.1",
     "ndb": "^1.1.5",
     "nodemon": "^2.0.12",
+    "parcel-bundler": "^1.12.3",
     "prettier": "^2.4.0"
   },
   "engines": {
