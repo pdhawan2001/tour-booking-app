@@ -57,3 +57,9 @@ exports.getLoginForm = catchAsync(async (req, res, next) => {
     title: 'Log in to your account',
   });
 });
+
+exports.getAccount = (req, res) => {
+  res.status(200).setHeader(CSP, POLICY).render('account', {
+    title: 'Your account',
+  });
+};

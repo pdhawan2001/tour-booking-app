@@ -5,7 +5,7 @@ export const hideAlert = () => {
   if (el) {
     el.parentElement.removeChild(el);
   }
-}
+};
 
 // type is either 'success' or 'error'
 export const showAlert = (type, msg) => {
