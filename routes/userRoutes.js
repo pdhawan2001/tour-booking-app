@@ -7,6 +7,7 @@ const router = express.Router();
 router.post('/signup', authController.signup);
 router.post('/login', authController.login);
 router.get('/logout', authController.logout);
+
 router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword); // because it will update password
 
@@ -15,7 +16,12 @@ router.use(authController.protect); // it will only call the next middleware if 
 
 router.patch('/updateMyPassword', authController.updatePassword);
 router.get('/me', userController.getMe, userController.getUser);
-router.patch('/updateMe', userController.updateMe);
+router.patch(
+  '/updateMe',
+  userController.uploadUserPhoto,
+  userController.resizeUserPhoto,
+  userController.updateMe
+); // single means that we only have to updatae 1 field and photo is the name of that field
 router.delete('/deleteMe', userController.deleteMe); // we will use delete as user is not accessible but will not actually delete it
 
 router.use(authController.restrictTo('admin'));

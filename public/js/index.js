@@ -32,16 +32,20 @@ if (logOutBtn) logOutBtn.addEventListener('click', logout); // whenever the log 
 if (userDataForm) {
   userDataForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const name = document.getElementById('name').value;
-    const email = document.getElementById('email').value;
-    updateSettings({ name, email }, 'data');
+    const form = new FormData();
+    form.append('name', document.getElementById('name').value);
+    form.append('email', document.getElementById('email').value);
+    form.append('photo', document.getElementById('photo').files[0]); // files are an array
+    console.log(form);
+
+    updateSettings(form, 'data');
   });
 }
 
 if (userPasswordForm) {
   userPasswordForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    document.querySelector('.btn--save-password').textContent = 'Updating...'
+    document.querySelector('.btn--save-password').textContent = 'Updating...';
     const passwordCurrent = document.getElementById('password-current').value;
     const password = document.getElementById('password').value;
     const passwordConfirm = document.getElementById('password-confirm').value;
@@ -49,7 +53,7 @@ if (userPasswordForm) {
       { passwordCurrent, password, passwordConfirm },
       'password'
     );
-    document.querySelector('.btn--save-password').textContent = 'Save password'
+    document.querySelector('.btn--save-password').textContent = 'Save password';
     document.getElementById('password-current').value = '';
     document.getElementById('password').value = '';
     document.getElementById('password-confirm').value = '';

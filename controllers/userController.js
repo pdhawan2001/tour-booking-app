@@ -1,7 +1,55 @@
+const multer = require('multer');
+const sharp = require('sharp');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const factory = require('./handlerFactory');
+
+// const multerStorage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'public/img/users');
+//   }, // cb is like next in express, first arguement is error, if there is one or just null
+//   filename: (req, file, cb) => {
+//     // user-id-timestamp.jpeg
+//     const ext = file.mimetype.split('/')[1];
+//     cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
+//   },
+// });
+
+// when resizing or converting the image we don't need to save it to diskStorage, we can save it to memoryStorage
+const multerStorage = multer.memoryStorage(); // this way image will be stored as buffer
+
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true); // no error
+  } else {
+    cb(new AppError('Not an image! Please upload only images.', 400), false);
+  }
+};
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+
+exports.uploadUserPhoto = upload.single('photo');
+
+// when resizing or converting the image we don't need to save it to diskStorage, we can save it to memoryStorage
+exports.resizeUserPhoto = (req, res, next) => {
+  if (!req.file) return next();
+
+  // when we try to save image into memory the file name will not get set
+  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`; // we now know that it will always be jpeg because of the settings we specified
+
+  // accessing image through buffer
+  sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 }) // to compress it, so it doesn't take up too much space
+    .toFile(`public/img/users/${req.file.filename}`); // writing image to file
+
+  next();
+};
 
 const filterObj = (obj, ...allowedFields) => {
   // allowedFields contains all the arguements that we pass in and will create an array for the same
@@ -23,6 +71,8 @@ exports.getMe = (req, res, next) => {
 };
 
 exports.updateMe = catchAsync(async (req, res, next) => {
+  // console.log(req.file);
+  // console.log(req.body);
   // 1) Create error if user POST password data
   if (req.body.password || req.body.passwordConfirm) {
     return next(
@@ -35,6 +85,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 
   // 2) Filtered out unwanted fields names that are not allowed to be updated
   const filteredBody = filterObj(req.body, 'name', 'email'); // filter the body and things a user can update
+  if (req.file) filteredBody.photo = req.file.filename;
 
   // 3) Update user document
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
