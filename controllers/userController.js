@@ -35,21 +35,21 @@ const upload = multer({
 exports.uploadUserPhoto = upload.single('photo');
 
 // when resizing or converting the image we don't need to save it to diskStorage, we can save it to memoryStorage
-exports.resizeUserPhoto = (req, res, next) => {
+exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
   if (!req.file) return next();
 
   // when we try to save image into memory the file name will not get set
   req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`; // we now know that it will always be jpeg because of the settings we specified
 
   // accessing image through buffer
-  sharp(req.file.buffer)
+  await sharp(req.file.buffer)
     .resize(500, 500)
     .toFormat('jpeg')
     .jpeg({ quality: 90 }) // to compress it, so it doesn't take up too much space
     .toFile(`public/img/users/${req.file.filename}`); // writing image to file
 
   next();
-};
+});
 
 const filterObj = (obj, ...allowedFields) => {
   // allowedFields contains all the arguements that we pass in and will create an array for the same
