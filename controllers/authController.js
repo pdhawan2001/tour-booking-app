@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
-const sendEmail = require('../utils/email');
+const Email = require('../utils/email');
 
 // To create a new token
 const signToken = (
@@ -52,6 +52,9 @@ exports.signup = catchAsync(async (req, res, next) => {
     passwordChangedAt: req.body.passwordChangedAt,
     role: req.body.role,
   }); // create user with this much data, because of security reasons not with full body, as anyone can specify his role as admin here
+  const url = `${req.protocol}://${req.get('host')}/me`;
+  console.log(url);
+  await new Email(newUser, url).sendWelcome();
   createSendToken(newUser, 201, res);
 });
 
@@ -195,13 +198,12 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     'host'
   )}/api/v1/users/resetPassword/${resetToken}`; // user will click on this email will be able to request from there to change password, req.get('host') so that it can handle both production and development
 
-  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email`;
-
   try {
-    await sendEmail({
-      email: user.email, // or req.body.email
-      subject: 'Your password reset token (valid for 10 mins)',
-      message,
+    await new Email(user, resetURL).sendPasswordReset();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Token sent to email!',
     });
   } catch (err) {
     // because if there is an error we want to reset the token and expires property, and just not send the error itself
@@ -216,11 +218,6 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       )
     );
   }
-
-  res.status(200).json({
-    status: 'success',
-    message: 'Token sent to email!',
-  });
 });
 
 exports.resetPassword = catchAsync(async (req, res, next) => {
