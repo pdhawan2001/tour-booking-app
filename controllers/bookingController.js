@@ -5,20 +5,6 @@ const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
 const AppError = require('../utils/appError');
 
-const CSP = 'Content-Security-Policy';
-const POLICY =
-  "default-src 'self' https://*.mapbox.com ;" +
-  "connect-src 'self' https://js.stripe.com" +
-  "base-uri 'self';block-all-mixed-content;" +
-  "font-src 'self' https: data:;" +
-  "frame-ancestors 'self';" +
-  "img-src http://localhost:8000 'self' blob: data:;" +
-  "object-src 'none';" +
-  "script-src https: cdn.jsdelivr.net cdnjs.cloudflare.com js.stripe.com 'self' blob: ;" +
-  "script-src-attr 'none';" +
-  "style-src 'self' https: 'unsafe-inline';" +
-  'upgrade-insecure-requests;';
-
 exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   // 1) Get the currently booked tour
   const tour = await Tour.findById(req.params.tourId);
@@ -36,7 +22,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
       {
         name: `${tour.name} Tour`,
         description: tour.summary,
-        // images: [``],
+        images: [`${req.protocol}://${req.get('host')}/img/tours/${tour.imageCover}`],
         amount: tour.price * 100,
         currency: 'usd',
         quantity: 1,

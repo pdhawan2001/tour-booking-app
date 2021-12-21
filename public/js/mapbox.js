@@ -4,7 +4,7 @@ export const displayMap = (locations) => {
   mapboxgl.accessToken =
     'pk.eyJ1IjoiaW5kb2xlbnR0cm91dCIsImEiOiJja3dmYjY1dncwMHc0Mm5tbHBweXQ5aGRoIn0.AFnMsS7IRziusCYl-5pTiA';
 
-  const map = new mapboxgl.Map({
+  var map = new mapboxgl.Map({
     container: 'map', // container ID // that's why we created map file in pug with 'map' id
     style: 'mapbox://styles/indolenttrout/ckwfbt3m75ye915odzla0wcwh',
     scrollZoom: false,

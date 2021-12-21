@@ -68,12 +68,13 @@ exports.getMyTours = catchAsync(async (req, res, next) => {
 
   // 2) Find tours with return IDs
   const tourIDs = bookings.map((el) => el.tour); // it will grab each tour while looping
-  const tour = await Tour.find({ _id: { $in: tourIDs } }); // we need a new operator that's why we are using tour.find
+  const tours = await Tour.find({ _id: { $in: tourIDs } }); // we need a new operator that's why we are using tour.find
 
   res.status(200).render('overview', {
     title: 'My tours',
-    tour,
+    tours,
   });
+  console.log(tours);
 });
 
 exports.updateUserData = catchAsync(async (req, res, next) => {
