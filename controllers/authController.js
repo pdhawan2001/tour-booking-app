@@ -53,7 +53,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     role: req.body.role,
   }); // create user with this much data, because of security reasons not with full body, as anyone can specify his role as admin here
   const url = `${req.protocol}://${req.get('host')}/me`;
-  console.log(url);
+  // console.log(url);
   await new Email(newUser, url).sendWelcome();
   createSendToken(newUser, 201, res);
 });
