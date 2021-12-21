@@ -14,7 +14,7 @@ const signToken = (
     expiresIn: process.env.JWT_EXPIRES_IN,
   }); // in mongoDB id is called _id, secret is a string used to create a token, a secret string
 
-const createSendToken = (user, statusCode, res) => {
+const createSendToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
 
   // Sending response(token) as a cookie
@@ -23,11 +23,8 @@ const createSendToken = (user, statusCode, res) => {
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
     ), //it will expire in today's date + time we set in config file(converting in milliseconds) // client/browser will delete the cookie when it has expired
     httpOnly: true, // this will make sure that cookie can not be in any way modified by the browser, this way browser will just store it and send it just like any other req, to prevent cross site scripting attacks
+    secure: req.secure || req.headers['x-forwarded-proto'] === 'https', // this will ensure that cookie will only be sent on an encrypted network like HTTPS and req.headers for HEROKU
   };
-
-  if (process.env.NODE_ENV === 'production') {
-    cookieOptions.secure = true; // this will ensure that cookie will only be sent on an encrypted network like HTTPS
-  }
 
   res.cookie('jwt', token, cookieOptions);
 
@@ -55,7 +52,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   const url = `${req.protocol}://${req.get('host')}/me`;
   // console.log(url);
   await new Email(newUser, url).sendWelcome();
-  createSendToken(newUser, 201, res);
+  createSendToken(newUser, 201, req, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -75,7 +72,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   // 3) If everything ok, send JWT token to client.
-  createSendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
 
 exports.logout = (req, res) => {
@@ -274,5 +271,5 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   // User.findByIdAndUpdate will NOT work as it will skip all the validators!
 
   // 4) Log user in, send JWT
-  createSendToken(user, 200, res);
+  createSendToken(user, 200, req, res);
 });
